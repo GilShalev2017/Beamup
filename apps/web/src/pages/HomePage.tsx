@@ -3,6 +3,7 @@ import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { InventoryTable } from '../components/InventoryTable';
 import { LiveFeed } from '../components/LiveFeed';
+import { AgentPanel } from '../components/AgentPanel';
 import { useAuthStore } from '../store/useAuthStore';
 
 export const HomePage = () => {
@@ -36,14 +37,17 @@ export const HomePage = () => {
     </Box>
 
     <Grid container spacing={3}>
-      {/* Inventory table — takes 3/4 of the width */}
+      {/* Inventory table — 9/12 */}
       <Grid item xs={12} lg={9}>
         <InventoryTable />
       </Grid>
 
-      {/* Live Socket.IO feed — 1/4 */}
-      <Grid item xs={12} lg={3} style={{ minHeight: 500 }}>
-        <LiveFeed />
+      {/* Right sidebar — Live Feed + Agent Panel */}
+      <Grid item xs={12} lg={3}>
+        <Box className="flex flex-col gap-3">
+          <LiveFeed />
+          <AgentPanel />
+        </Box>
       </Grid>
     </Grid>
   </Container>

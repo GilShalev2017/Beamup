@@ -13,7 +13,7 @@
     "clean": "turbo run clean",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "db:seed": "npm run seed --workspace=apps/api"
+    "db:seed": "npm run seed -w @beamup/api"
   },
   "devDependencies": {
     "turbo": "^2.0.0"

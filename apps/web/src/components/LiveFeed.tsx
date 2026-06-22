@@ -21,38 +21,37 @@ export const LiveFeed = () => {
   useEffect(() => {
     const socket = getSocket();
 
-    socket.on('connect',    () => setSocketConnected(true));
-    socket.on('disconnect', () => setSocketConnected(false));
+    // Named handlers so socket.off() removes exactly these — not all listeners
+    const onConnect    = () => setSocketConnected(true);
+    const onDisconnect = () => setSocketConnected(false);
 
-    socket.on('item:created', (item: Item) => {
-      addLiveEvent({ type: 'created', message: `New item created: ${item.name} (${item.sku})`, timestamp: new Date().toISOString(), item });
-    });
+    const onCreated = (item: Item) =>
+      addLiveEvent({ type: 'created', message: `New item: ${item.name} (${item.sku})`, timestamp: new Date().toISOString(), item });
 
-    socket.on('item:updated', (item: Item) => {
-      addLiveEvent({ type: 'updated', message: `Item updated: ${item.name} — qty: ${item.quantity}`, timestamp: new Date().toISOString(), item });
-    });
+    const onUpdated = (item: Item) =>
+      addLiveEvent({ type: 'updated', message: `Updated: ${item.name} — qty: ${item.quantity}`, timestamp: new Date().toISOString(), item });
 
-    socket.on('item:deleted', ({ id }: { id: string }) => {
-      addLiveEvent({ type: 'deleted', message: `Item deleted: ${id}`, timestamp: new Date().toISOString() });
-    });
+    const onDeleted = ({ id }: { id: string }) =>
+      addLiveEvent({ type: 'deleted', message: `Deleted item: ${id}`, timestamp: new Date().toISOString() });
 
-    socket.on('alert', (payload: { event: string; item?: Item }) => {
-      addLiveEvent({ type: 'alert', message: `⚠️ ${payload.event}: ${payload.item?.name ?? ''}`, timestamp: new Date().toISOString() });
-    });
+    const onAlert = (payload: { event: string; item?: Item }) =>
+      addLiveEvent({ type: 'alert', message: `⚠️ ${payload.event}${payload.item?.name ? ': ' + payload.item.name : ''}`, timestamp: new Date().toISOString() });
 
-    // Also listen to Kafka-forwarded inventory updates
-    socket.on('inventory:update', (payload: { event: string; item?: Item }) => {
-      addLiveEvent({ type: 'updated', message: `[Kafka] ${payload.event}`, timestamp: new Date().toISOString() });
-    });
+    socket.on('connect',      onConnect);
+    socket.on('disconnect',   onDisconnect);
+    socket.on('item:created', onCreated);
+    socket.on('item:updated', onUpdated);
+    socket.on('item:deleted', onDeleted);
+    socket.on('alert',        onAlert);
 
     return () => {
-      socket.off('connect');
-      socket.off('disconnect');
-      socket.off('item:created');
-      socket.off('item:updated');
-      socket.off('item:deleted');
-      socket.off('alert');
-      socket.off('inventory:update');
+      // Pass exact handler reference — only removes THIS listener, not all listeners on the event
+      socket.off('connect',      onConnect);
+      socket.off('disconnect',   onDisconnect);
+      socket.off('item:created', onCreated);
+      socket.off('item:updated', onUpdated);
+      socket.off('item:deleted', onDeleted);
+      socket.off('alert',        onAlert);
     };
   }, [addLiveEvent, setSocketConnected]);
 

@@ -1,48 +1,36 @@
-// Prisma schema — PostgreSQL (relational data: users, orders, audit logs)
+// Prisma schema — PostgreSQL
+// Owns: relational/transactional data (orders, audit logs)
+// Auth users live in MongoDB only — userId here is the MongoDB _id string
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  role      String   @default("viewer") // admin | ops | viewer
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  orders    Order[]
-  auditLogs AuditLog[]
-
-  @@map("users")
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
-  sku         String
-  quantity    Int
-  status      OrderStatus @default(PENDING)
-  warehouseId String
-  notes       String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id           String      @id @default(cuid())
+  userId       String?     // MongoDB user _id (no FK — cross-DB reference)
+  sku          String
+  quantity     Int
+  status       OrderStatus @default(PENDING)
+  warehouseId  String
+  priority     String      @default("normal")
+  notes        String?
+  triggeredBy  String      @default("manual") // "agent" | "manual"
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   @@index([status])
   @@index([sku])
+  @@index([warehouseId])
   @@map("orders")
 }
 
 model AuditLog {
   id         String   @id @default(cuid())
-  userId     String?
-  user       User?    @relation(fields: [userId], references: [id])
+  userId     String?  // MongoDB user _id
   action     String
   entityType String
   entityId   String

@@ -1,9 +1,16 @@
 import { createConsumer, KAFKA_TOPICS } from '../config/kafka';
 import { getSocketIO } from '../sockets';
 
+const EVENT_TO_SOCKET: Record<string, string> = {
+  ITEM_CREATED: 'item:created',
+  ITEM_UPDATED: 'item:updated',
+  ITEM_DELETED: 'item:deleted',
+};
+
 /**
- * Consumes item.updates events and broadcasts them to connected WebSocket clients.
- * This is how the frontend gets live inventory updates without polling.
+ * Single source of truth for broadcasting item changes to the frontend.
+ * Service publishes to Kafka → this consumer → Socket.IO.
+ * Nothing else emits these socket events.
  */
 export const startItemUpdatesConsumer = async (): Promise<void> => {
   const consumer = await createConsumer('beamup-item-updates');
@@ -16,9 +23,13 @@ export const startItemUpdatesConsumer = async (): Promise<void> => {
         const payload = JSON.parse(message.value?.toString() ?? '{}');
         console.log(`[Kafka] ${topic}[${partition}] → ${payload.event}`);
 
-        // Forward to Socket.io room so UI updates in real-time
         const io = getSocketIO();
-        io.to('inventory').emit('inventory:update', payload);
+        const socketEvent = EVENT_TO_SOCKET[payload.event];
+
+        if (socketEvent) {
+          // Emit the typed event (item:created / item:updated / item:deleted)
+          io.emit(socketEvent, payload.item ?? { id: payload.itemId });
+        }
       } catch (err) {
         console.error('[Kafka] Failed to process item.updates message:', err);
       }

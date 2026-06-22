@@ -15,11 +15,6 @@ const seedItems = [
   { sku: 'SKU-005', name: 'Forklift Battery 48V', category: 'Energy',     quantity: 22,  warehouseId: 'WH-CHI-01', price: 2150.00, tags: ['battery', 'forklift'] },
 ];
 
-const seedPgUsers = [
-  { email: 'admin@beamup.ai', name: 'Admin User', role: 'admin' },
-  { email: 'ops@beamup.ai',   name: 'Ops Manager', role: 'ops' },
-];
-
 async function seed() {
   console.log('🌱 Seeding database...\n');
 
@@ -28,16 +23,6 @@ async function seed() {
   await Item.deleteMany({});
   const inserted = await Item.insertMany(seedItems);
   console.log(`✅ MongoDB: inserted ${inserted.length} items`);
-
-  // ─── PostgreSQL (Prisma) ──────────────────────────────────────────────────
-  for (const user of seedPgUsers) {
-    await prisma.user.upsert({
-      where: { email: user.email },
-      update: {},
-      create: user,
-    });
-  }
-  console.log(`✅ PostgreSQL: upserted ${seedPgUsers.length} users`);
 
   console.log('\n🎉 Seed complete!');
 }
