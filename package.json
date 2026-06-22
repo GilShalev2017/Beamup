@@ -1,0 +1,24 @@
+{
+  "name": "beamup-monorepo",
+  "private": true,
+  "packageManager": "npm@10.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "db:seed": "npm run seed --workspace=apps/api"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
